@@ -36,17 +36,41 @@ class _HomePageState extends SupabaseAuthState<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Happy Chat'),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+              primary: Colors.white,
+            ),
+            onPressed: () async {
+              final res =
+                  await Supabase.instance.client.rpc('create_room').execute();
+              debugPrint(res.error.toString());
+              debugPrint(res.data);
+            },
+            child: const Text('New Room'),
+          ),
+        ],
       ),
       body: ListView.builder(
         reverse: true,
         itemCount: 2,
         itemBuilder: ((context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: Colors.red,
+          return Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 4,
+                  horizontal: 8,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: Colors.red[200],
+                ),
+                child: const Text('chat bubble'),
+              ),
             ),
-            child: const Text('chat bubble'),
           );
         }),
       ),
