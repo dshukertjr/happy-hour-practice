@@ -60,8 +60,12 @@ class _LoginPageState extends State<LoginPage> {
                   }
                   final email = _emailController.text;
                   final password = _passwordController.text;
-                  await Supabase.instance.client.auth
+                  final res = await Supabase.instance.client.auth
                       .signIn(email: email, password: password);
+                  if (res.error != null) {
+                    print(res.error.toString());
+                    return;
+                  }
                   if (mounted) {
                     Navigator.of(context).pop();
                   }

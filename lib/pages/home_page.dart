@@ -54,42 +54,9 @@ class _HomePageState extends SupabaseAuthState<HomePage> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: true,
-              itemCount: 2,
-              itemBuilder: ((context, index) {
-                return Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: Colors.blue[200],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Tyler',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          Text('chat bubble'),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+          const Expanded(
+            child:
+                MessageTimeline(roomId: 'ce8c792a-df7b-4247-a75b-b8e022de903b'),
           ),
           Material(
             color: Colors.red[300],
@@ -100,18 +67,30 @@ class _HomePageState extends SupabaseAuthState<HomePage> {
                     controller: _messageController,
                     decoration: const InputDecoration(
                       hintText: 'Type something...',
+                      border: InputBorder.none,
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                     ),
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final message = _messageController.text;
-                    Supabase.instance.client.from('messages').insert({
+                    final res = await Supabase.instance.client
+                        .from('messages')
+                        .insert({
                       'message': message,
                       'room_id': 'ce8c792a-df7b-4247-a75b-b8e022de903b'
                     }).execute();
+                    if (res.error != null && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(res.error.toString()),
+                        ),
+                      );
+                      return;
+                    }
+                    _messageController.clear();
                   },
                   child: const Text('Send'),
                 ),
@@ -148,4 +127,100 @@ class _HomePageState extends SupabaseAuthState<HomePage> {
   void onUnauthenticated() {
     // TODO: implement onUnauthenticated
   }
+}
+
+class MessageTimeline extends StatelessWidget {
+  final String roomId;
+  const MessageTimeline({
+    required this.roomId,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+        stream: Supabase.instance.client
+            .from('messages:room_id=eq.$roomId')
+            .stream(['id'])
+            .order('created_at')
+            .execute(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final messages = snapshot.data!.map(Message.fromMap).toList();
+          return ListView.builder(
+            reverse: true,
+            itemCount: messages.length,
+            itemBuilder: ((context, index) {
+              final message = messages[index];
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: Colors.blue[200],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FutureBuilder<PostgrestResponse<dynamic>>(
+                            future: Supabase.instance.client
+                                .from('profiles')
+                                .select()
+                                .eq('id', message.profileId)
+                                .single()
+                                .execute(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const Text(
+                                  'Loading...',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                );
+                              }
+                              final username = snapshot.data!.data['username'];
+                              return Text(
+                                username,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                              );
+                            }),
+                        Text(message.message),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          );
+        });
+  }
+}
+
+class Message {
+  final String message;
+  final DateTime createdAt;
+  final String profileId;
+
+  Message({
+    required this.message,
+    required this.createdAt,
+    required this.profileId,
+  });
+
+  Message.fromMap(Map<String, dynamic> map)
+      : message = map['message'],
+        createdAt = DateTime.parse(map['created_at']),
+        profileId = map['profile_id'];
 }
