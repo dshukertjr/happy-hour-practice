@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:happy_chat/pages/login_page.dart';
+import 'package:happy_chat/pages/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -19,113 +19,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.red[200],
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green[200]!,
-          primary: Colors.blue[200],
+          primary: Colors.green[200],
         ),
       ),
       title: 'Happy Chat',
       home: const HomePage(),
     );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends SupabaseAuthState<HomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Happy Chat'),
-        actions: [
-          StreamBuilder<AuthChangeEvent>(
-              stream: SupabaseAuth.instance.onAuthChange,
-              builder: (context, snapshot) {
-                if (snapshot.data == AuthChangeEvent.signedIn) {
-                  return TextButton(
-                    style: TextButton.styleFrom(
-                      primary: Colors.white,
-                    ),
-                    onPressed: () async {
-                      final res = await Supabase.instance.client
-                          .rpc('create_room')
-                          .execute();
-                      debugPrint(res.error.toString());
-                      debugPrint(res.data);
-                    },
-                    child: const Text('New Room'),
-                  );
-                } else {
-                  return TextButton(
-                    style: TextButton.styleFrom(
-                      primary: Colors.white,
-                    ),
-                    onPressed: () async {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ));
-                    },
-                    child: const Text('Signin'),
-                  );
-                }
-              }),
-        ],
-      ),
-      body: ListView.builder(
-        reverse: true,
-        itemCount: 2,
-        itemBuilder: ((context, index) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 4,
-                  horizontal: 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: Colors.red[200],
-                ),
-                child: const Text('chat bubble'),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    recoverSupabaseSession();
-  }
-
-  @override
-  void onAuthenticated(Session session) {
-    // TODO: implement onAuthenticated
-  }
-
-  @override
-  void onErrorAuthenticating(String message) {
-    // TODO: implement onErrorAuthenticating
-  }
-
-  @override
-  void onPasswordRecovery(Session session) {
-    // TODO: implement onPasswordRecovery
-  }
-
-  @override
-  void onUnauthenticated() {
-    // TODO: implement onUnauthenticated
   }
 }
