@@ -17,9 +17,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      theme: ThemeData.light().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green[200]!,
+          primary: Colors.blue[200],
+        ),
+      ),
       title: 'Happy Chat',
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }

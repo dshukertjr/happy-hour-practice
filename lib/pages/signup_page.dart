@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'login_page.dart';
 
@@ -12,6 +13,10 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
 
+  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +29,7 @@ class _SignupPageState extends State<SignupPage> {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           children: [
             TextFormField(
+              controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 label: Text('Email'),
@@ -36,6 +42,7 @@ class _SignupPageState extends State<SignupPage> {
               },
             ),
             TextFormField(
+              controller: _usernameController,
               decoration: const InputDecoration(
                 label: Text('Username'),
               ),
@@ -47,6 +54,7 @@ class _SignupPageState extends State<SignupPage> {
               },
             ),
             TextFormField(
+              controller: _passwordController,
               obscureText: true,
               decoration: const InputDecoration(
                 label: Text('Password'),
@@ -58,7 +66,25 @@ class _SignupPageState extends State<SignupPage> {
                 return null;
               },
             ),
-            ElevatedButton(onPressed: () {}, child: const Text('Sign Up')),
+            ElevatedButton(
+                onPressed: () async {
+                  final isValid = _formKey.currentState?.validate() ?? false;
+                  if (!isValid) {
+                    return;
+                  }
+                  final email = _emailController.text;
+                  final username = _usernameController.text;
+                  final password = _passwordController.text;
+                  await Supabase.instance.client.auth.signUp(
+                    email,
+                    password,
+                    userMetadata: {'username': username},
+                  );
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('Sign Up')),
             TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
@@ -72,5 +98,11 @@ class _SignupPageState extends State<SignupPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 }
