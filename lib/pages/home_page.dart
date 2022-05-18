@@ -154,57 +154,73 @@ class MessageTimeline extends StatelessWidget {
             itemCount: messages.length,
             itemBuilder: ((context, index) {
               final message = messages[index];
-              return Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 4,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: Colors.blue[200],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FutureBuilder<PostgrestResponse<dynamic>>(
-                            future: Supabase.instance.client
-                                .from('profiles')
-                                .select()
-                                .eq('id', message.profileId)
-                                .single()
-                                .execute(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return const Text(
-                                  'Loading...',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black54,
-                                  ),
-                                );
-                              }
-                              final username = snapshot.data!.data['username'];
-                              return Text(
-                                username,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black54,
-                                ),
-                              );
-                            }),
-                        Text(message.message),
-                      ],
-                    ),
-                  ),
-                ),
-              );
+              return ChatBubble(message: message);
             }),
           );
         });
+  }
+}
+
+class ChatBubble extends StatelessWidget {
+  const ChatBubble({
+    Key? key,
+    required this.message,
+  }) : super(key: key);
+
+  final Message message;
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    final isMyMessage = uid == message.profileId;
+    return Align(
+      alignment: isMyMessage ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 4,
+            horizontal: 8,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            color: isMyMessage ? Colors.blue[200] : Colors.grey,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FutureBuilder<PostgrestResponse<dynamic>>(
+                  future: Supabase.instance.client
+                      .from('profiles')
+                      .select()
+                      .eq('id', message.profileId)
+                      .single()
+                      .execute(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Text(
+                        'Loading...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      );
+                    }
+                    final username = snapshot.data!.data['username'];
+                    return Text(
+                      username,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    );
+                  }),
+              Text(message.message),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
