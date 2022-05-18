@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:happy_chat/pages/login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -37,18 +38,37 @@ class _HomePageState extends SupabaseAuthState<HomePage> {
       appBar: AppBar(
         title: const Text('Happy Chat'),
         actions: [
-          TextButton(
-            style: TextButton.styleFrom(
-              primary: Colors.white,
-            ),
-            onPressed: () async {
-              final res =
-                  await Supabase.instance.client.rpc('create_room').execute();
-              debugPrint(res.error.toString());
-              debugPrint(res.data);
-            },
-            child: const Text('New Room'),
-          ),
+          StreamBuilder<AuthChangeEvent>(
+              stream: SupabaseAuth.instance.onAuthChange,
+              builder: (context, snapshot) {
+                if (snapshot.data == AuthChangeEvent.signedIn) {
+                  return TextButton(
+                    style: TextButton.styleFrom(
+                      primary: Colors.white,
+                    ),
+                    onPressed: () async {
+                      final res = await Supabase.instance.client
+                          .rpc('create_room')
+                          .execute();
+                      debugPrint(res.error.toString());
+                      debugPrint(res.data);
+                    },
+                    child: const Text('New Room'),
+                  );
+                } else {
+                  return TextButton(
+                    style: TextButton.styleFrom(
+                      primary: Colors.white,
+                    ),
+                    onPressed: () async {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ));
+                    },
+                    child: const Text('Signin'),
+                  );
+                }
+              }),
         ],
       ),
       body: ListView.builder(
@@ -75,6 +95,12 @@ class _HomePageState extends SupabaseAuthState<HomePage> {
         }),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    recoverSupabaseSession();
   }
 
   @override

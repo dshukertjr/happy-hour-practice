@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:happy_chat/pages/signup_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+import 'login_page.dart';
+
+class SignupPage extends StatefulWidget {
+  const SignupPage({Key? key}) : super(key: key);
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Create an Account'),
       ),
       body: Form(
         key: _formKey,
@@ -57,16 +58,16 @@ class _LoginPageState extends State<LoginPage> {
                 return null;
               },
             ),
-            ElevatedButton(onPressed: () {}, child: const Text('Signin')),
+            ElevatedButton(onPressed: () {}, child: const Text('Sign Up')),
             TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => const SignupPage(),
+                      builder: (context) => const LoginPage(),
                     ),
                   );
                 },
-                child: const Text('Create an account')),
+                child: const Text('Login instead')),
           ],
         ),
       ),
